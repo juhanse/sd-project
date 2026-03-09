@@ -62,7 +62,37 @@ public class Graph {
 
     public Localisation[] determinerZoneInondee(long[] idsOrigin,double epsilon) {
         //TODO
-        return null ;
+        Set<Localisation> visites = new HashSet<>();
+        Queue<Localisation> file = new LinkedList<>();
+        List<Localisation> zone = new ArrayList<>();
+
+        for(long id : idsOrigin){
+            Localisation start = noeuds.get(id);
+            if(start != null){
+                file.add(start);
+                visites.add(start);
+            }
+        }
+
+        while(!file.isEmpty()){
+
+            Localisation courant = file.poll();
+            zone.add(courant);
+
+            for(Arc arc : adjacence.get(courant)){
+
+                Localisation voisin = arc.getArrivee();
+
+                if(!visites.contains(voisin) &&
+                        voisin.getAltitude() <= courant.getAltitude() + epsilon){
+
+                    visites.add(voisin);
+                    file.add(voisin);
+                }
+            }
+        }
+
+        return zone.toArray(new Localisation[0]);
     }
 
     public Deque<Localisation> trouverCheminLePlusCourtPourContournerLaZoneInondee(long idOrigin, long idDestination, Localisation[] floodedZone) {
