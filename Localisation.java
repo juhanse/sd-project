@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 public class Localisation {
     private String id;
     private String nom;
@@ -11,6 +13,19 @@ public class Localisation {
         this.latitude = latitude;
         this.longitude = longitude;
         this.altitude = altitude;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Localisation that = (Localisation) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 
     public String getId() {
