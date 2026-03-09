@@ -1,31 +1,31 @@
 import java.util.Objects;
 
 public class Arc {
-    private String origine;
-    private String arrivee;
+    private Localisation origine;
+    private Localisation arrivee;
     private double distance;
     private String nomRue;
 
-    public Arc(String origine, String arrivee, double distance, String nomRue) {
+    public Arc(Localisation origine, Localisation arrivee, double distance, String nomRue) {
         this.origine = origine;
         this.arrivee = arrivee;
         this.distance = distance;
         this.nomRue = nomRue;
     }
 
-    public String getOrigine() {
+    public Localisation getOrigine() {
         return origine;
     }
 
-    public void setOrigine(String origine) {
+    public void setOrigine(Localisation origine) {
         this.origine = origine;
     }
 
-    public String getArrivee() {
+    public Localisation getArrivee() {
         return arrivee;
     }
 
-    public void setArrivee(String arrivee) {
+    public void setArrivee(Localisation arrivee) {
         this.arrivee = arrivee;
     }
 
