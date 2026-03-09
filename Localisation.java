@@ -1,13 +1,13 @@
 import java.util.Objects;
 
 public class Localisation {
-    private String id;
+    private long id;
     private String nom;
     private double latitude;
     private double longitude;
     private double altitude;
 
-    public Localisation(String id, String nom, double latitude, double longitude, double altitude) {
+    public Localisation(long id, String nom, double latitude, double longitude, double altitude) {
         this.id = id;
         this.nom = nom;
         this.latitude = latitude;
@@ -28,7 +28,7 @@ public class Localisation {
         return Objects.hash(id);
     }
 
-    public String getId() {
+    public long getId() {
         return this.id;
     }
 
