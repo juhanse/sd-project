@@ -1,7 +1,9 @@
-public class Graph {
+import java.util.Deque;
+import java.util.Map;
 
-	//ATTRIBUT ?
-	//TODO
+public class Graph {
+    private Map<Long, Localisation> noeuds;
+    private Map<Localisation, List<Arc>> adjacence;
 
     public Graph(String localisations, String roads)  {
         //TODO
@@ -9,7 +11,7 @@ public class Graph {
 
     public Localisation[] determinerZoneInondee(long[] idsOrigin,double epsilon) {
         //TODO
-		return null ;
+        return null ;
     }
 
     public Deque<Localisation> trouverCheminLePlusCourtPourContournerLaZoneInondee(long idOrigin, long idDestination, Localisation[] floodedZone) {
@@ -26,6 +28,4 @@ public class Graph {
         //TODO
 		return null ;
     }
-
-
 }
