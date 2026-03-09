@@ -1,11 +1,11 @@
 public class Localisation {
     private String id;
-    private String altitude;
-    private String longitude;
+    private double altitude;
+    private double longitude;
     private String nom;
     private double metres;
 
-    public Localisation(String id, String altitude, String longitude, String nom, double metres) {
+    public Localisation(String id, double altitude, double longitude, String nom, double metres) {
         this.id = id;
         this.altitude = altitude;
         this.longitude = longitude;
@@ -17,11 +17,11 @@ public class Localisation {
         return this.id;
     }
 
-    public String getAltitude() {
+    public double getAltitude() {
         return this.altitude;
     }
 
-    public String getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
