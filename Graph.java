@@ -1,4 +1,6 @@
 import java.util.Deque;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Graph {
@@ -6,7 +8,10 @@ public class Graph {
     private Map<Localisation, List<Arc>> adjacence;
 
     public Graph(String localisations, String roads)  {
-        //TODO
+        this.noeuds = new HashMap<>();
+        this.adjacence = new HashMap<>();
+
+        loadCSV(localisations, roads);
     }
 
     public Localisation[] determinerZoneInondee(long[] idsOrigin,double epsilon) {
