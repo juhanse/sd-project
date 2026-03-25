@@ -64,12 +64,11 @@ public class Graph {
         Deque<Localisation> chemin = new ArrayDeque<>();
         long courant = idEnd;
 
-        // Remonter les prédécesseurs jusqu'au point de départ
         while (courant != idStart) {
             chemin.addFirst(noeuds.get(courant));
             courant = predecesseurs.get(courant);
         }
-        chemin.addFirst(noeuds.get(idStart)); // ajouter le noeud de départ
+        chemin.addFirst(noeuds.get(idStart));
 
         return chemin;
     }
