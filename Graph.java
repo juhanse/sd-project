@@ -141,7 +141,7 @@ public class Graph {
             }
         }
 
-        return null;
+        throw new RuntimeException("Pas de chemin de " + idOrigin + " a " + idDestination + " evitant la zone inondee");
     }
 
     public Map<Localisation,Double> determinerChronologieDeLaCrue(long[] idsOrigin, double vWaterInit, double k) {
@@ -250,6 +250,6 @@ public class Graph {
             }
         }
 
-        return null;
+        throw new RuntimeException("Pas de chemin de " + idOrigin + " a " + idEvacuation + " evitant la zone inondee");
     }
 }
