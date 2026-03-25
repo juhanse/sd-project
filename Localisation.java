@@ -20,7 +20,7 @@ public class Localisation {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Localisation that = (Localisation) o;
-        return Objects.equals(id, that.id);
+        return id == that.id;
     }
 
     @Override
