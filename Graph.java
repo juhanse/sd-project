@@ -60,6 +60,21 @@ public class Graph {
         }
     }
 
+    private Deque<Localisation> reconstruireChemin(Map<Long, Long> predecesseurs, long idStart, long idEnd) {
+
+        Deque<Localisation> chemin = new ArrayDeque<>();
+        long courant = idEnd;
+
+        // Remonter les prédécesseurs jusqu'au point de départ
+        while (courant != idStart) {
+            chemin.addFirst(noeuds.get(courant));
+            courant = predecesseurs.get(courant);
+        }
+        chemin.addFirst(noeuds.get(idStart)); // ajouter le noeud de départ
+
+        return chemin;
+    }
+
     public Localisation[] determinerZoneInondee(long[] idsOrigin,double epsilon) {
         //TODO
         Set<Localisation> visites = new HashSet<>();
@@ -96,17 +111,153 @@ public class Graph {
     }
 
     public Deque<Localisation> trouverCheminLePlusCourtPourContournerLaZoneInondee(long idOrigin, long idDestination, Localisation[] floodedZone) {
-		//TODO
-        return null ;
+        // Convertir le tableau en HashSet une seule fois → O(1) par lookup
+        // NE PAS itérer sur floodedZone à chaque étape du BFS (serait O(N²))
+        Set<Long> idsInondes = new HashSet<>();
+        for (Localisation loc : floodedZone) {
+            idsInondes.add(loc.getId());
+        }
+
+        Localisation depart = noeuds.get(idOrigin);
+        if (depart == null || idsInondes.contains(idOrigin)) return null;
+
+        // predecesseurs : nodeId → idDuPredecesseur
+        // Sert aussi de marqueur "visité" : si la clé existe, le noeud a été visité
+        Map<Long, Long> predecesseurs = new HashMap<>();
+        Queue<Localisation> file = new LinkedList<>();
+
+        predecesseurs.put(idOrigin, idOrigin); // sentinelle de départ
+        file.add(depart);
+
+        while (!file.isEmpty()) {
+            Localisation courant = file.poll();
+
+            if (courant.getId() == idDestination) {
+                return reconstruireChemin(predecesseurs, idOrigin, idDestination);
+            }
+
+            List<Arc> arcs = adjacence.get(courant);
+            if (arcs == null) continue;
+
+            for (Arc arc : arcs) {
+                Localisation voisin = arc.getArrivee();
+                long voisinId = voisin.getId();
+
+                // Sauter si déjà visité OU si inondé
+                if (!predecesseurs.containsKey(voisinId) && !idsInondes.contains(voisinId)) {
+                    predecesseurs.put(voisinId, courant.getId());
+                    file.add(voisin);
+                }
+            }
+        }
+
+        return null;
     }
 
     public Map<Localisation,Double> determinerChronologieDeLaCrue(long[] idsOrigin, double vWaterInit, double k) {
-        //TODO
-        return null ;
+        // LinkedHashMap : conserve l'ordre d'insertion
+        // Dijkstra traite les noeuds par temps croissant → ordre garanti
+        Map<Localisation, Double> tFlood = new LinkedHashMap<>();
+
+        // État dans la PQ : double[] { temps, nodeId (double exact jusqu'à 2^53), vWater }
+        PriorityQueue<double[]> pq = new PriorityQueue<>(Comparator.comparingDouble(s -> s[0]));
+
+        for (long id : idsOrigin) {
+            Localisation loc = noeuds.get(id);
+            if (loc != null) {
+                pq.offer(new double[]{0.0, (double) id, vWaterInit});
+            }
+        }
+
+        while (!pq.isEmpty()) {
+            double[] etat = pq.poll();
+            double temps   = etat[0];
+            long   nodeId  = (long) etat[1];
+            double vWater  = etat[2];
+
+            Localisation courant = noeuds.get(nodeId);
+            if (courant == null) continue;
+
+            // Dijkstra : ignorer si déjà traité avec un temps plus court
+            if (tFlood.containsKey(courant)) continue;
+
+            tFlood.put(courant, temps);
+
+            List<Arc> arcs = adjacence.get(courant);
+            if (arcs == null) continue;
+
+            for (Arc arc : arcs) {
+                Localisation voisin = arc.getArrivee();
+                if (tFlood.containsKey(voisin)) continue;
+
+                // Vitesse de l'eau sur cet arc
+                // Pente S = (alt(origine) - alt(destination)) / distance
+                double pente = (courant.getAltitude() - voisin.getAltitude()) / arc.getDistance();
+                double vWaterVoisin = vWater + k * pente;
+
+                // Condition d'arrêt : vitesse nulle ou négative → l'eau ne passe pas
+                if (vWaterVoisin <= 0) continue;
+
+                // Poids de l'arc = temps de parcours = distance / vitesse
+                double poids = arc.getDistance() / vWaterVoisin;
+                pq.offer(new double[]{temps + poids, (double) voisin.getId(), vWaterVoisin});
+            }
+        }
+
+        return tFlood;
     }
 
     public Deque<Localisation> trouverCheminDEvacuationLePlusCourt(long idOrigin, long idEvacuation, double vVehicule, Map<Localisation,Double> tFlood) {
-        //TODO
-		return null ;
+        Map<Long, Double>      tempsMin      = new HashMap<>();
+        Map<Long, Long>        predecesseurs = new HashMap<>();
+
+        // État dans la PQ : double[] { temps, nodeId }
+        PriorityQueue<double[]> pq = new PriorityQueue<>(Comparator.comparingDouble(s -> s[0]));
+
+        Localisation depart = noeuds.get(idOrigin);
+        if (depart == null) return null;
+
+        tempsMin.put(idOrigin, 0.0);
+        predecesseurs.put(idOrigin, idOrigin); // sentinelle
+        pq.offer(new double[]{0.0, (double) idOrigin});
+
+        while (!pq.isEmpty()) {
+            double[] etat   = pq.poll();
+            double   temps  = etat[0];
+            long     nodeId = (long) etat[1];
+
+            // Noeud destination atteint : reconstruire et retourner
+            if (nodeId == idEvacuation) {
+                return reconstruireChemin(predecesseurs, idOrigin, idEvacuation);
+            }
+
+            // Ignorer si on a déjà trouvé un chemin plus court vers ce noeud
+            if (temps > tempsMin.getOrDefault(nodeId, Double.MAX_VALUE)) continue;
+
+            Localisation courant = noeuds.get(nodeId);
+            List<Arc> arcs = adjacence.get(courant);
+            if (arcs == null) continue;
+
+            for (Arc arc : arcs) {
+                Localisation voisin   = arc.getArrivee();
+                long         voisinId = voisin.getId();
+
+                double tempsArrivee = temps + arc.getDistance() / vVehicule;
+
+                // Contrainte temporelle : rejeter l'arc si le noeud est inondé à l'arrivée
+                // Condition exacte du sujet : t > tFlood.get(loc)
+                // Si voisin absent de tFlood → jamais inondé → toujours accessible
+                Double tFloodVoisin = tFlood.get(voisin);
+                if (tFloodVoisin != null && tempsArrivee > tFloodVoisin) continue;
+
+                if (tempsArrivee < tempsMin.getOrDefault(voisinId, Double.MAX_VALUE)) {
+                    tempsMin.put(voisinId, tempsArrivee);
+                    predecesseurs.put(voisinId, nodeId);
+                    pq.offer(new double[]{tempsArrivee, (double) voisinId});
+                }
+            }
+        }
+
+        return null;
     }
 }
